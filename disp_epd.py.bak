@@ -1,5 +1,5 @@
 from __future__ import print_function
-from rpi_epd2in7.epd import EPD
+from lib.epd import EPD
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
