@@ -4,6 +4,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import sys
+import time
 if sys.version_info.major < 3:
     input = raw_input
 
@@ -15,7 +16,7 @@ def main():
     epd = EPD()
     epd.init()
 
-    image = Image.new('1', (epd.width, epd.height), 255)
+    image = Image.new('1', (epd.height, epd.width), 255)
     draw = ImageDraw.Draw(image)
     bmp = Image.open('base.bmp')
     image.paste(bmp, (50, 10))

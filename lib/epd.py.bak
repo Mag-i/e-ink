@@ -248,7 +248,7 @@ class EPD(object):
         for byte in lut_to_use.lut_bb:
             self.send_data(byte)
 
-    def getbuffer(self, image):
+    def _get_frame_buffer(self, image):
         # logger.debug("bufsiz = ",int(self.width/8) * self.height)
         buf = [0xFF] * (int(self.width/8) * self.height)
         image_monocolor = image.convert('1')
@@ -270,6 +270,17 @@ class EPD(object):
                     newy = self.height - x - 1
                     if pixels[x, y] == 0:
                         buf[int((newx + newy*self.width) / 8)] &= ~(0x80 >> (y % 8))
+        return buf
+        
+    def _get_frame_buffer_for_size(self, image_monocolor, height, width):
+        """ Get a frame buffer object from a PIL Image object assuming a specific size"""
+        buf = [0x00] * (width * height // 8)
+        pixels = image_monocolor.load()
+        for y in range(height):
+            for x in range(width):
+                # Set the bits for the column of pixels at the current position
+                if pixels[x, y] != 0:
+                    buf[(x + y * width) // 8] |= (0x80 >> (x % 8))
         return buf
 
     def display_frame(self, image):
