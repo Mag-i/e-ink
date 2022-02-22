@@ -249,29 +249,14 @@ class EPD(object):
             self.send_data(byte)
 
     def _get_frame_buffer(self, image):
-        # logger.debug("bufsiz = ",int(self.width/8) * self.height)
-        buf = [0xFF] * (int(self.width/8) * self.height)
+        """ Get a full frame buffer from a PIL Image object """
         image_monocolor = image.convert('1')
         imwidth, imheight = image_monocolor.size
-        pixels = image_monocolor.load()
-        # logger.debug("imwidth = %d, imheight = %d",imwidth,imheight)
-        if(imwidth == self.width and imheight == self.height):
-       #     logger.debug("Vertical")
-            for y in range(imheight):
-                for x in range(imwidth):
-                    # Set the bits for the column of pixels at the current position.
-                    if pixels[x, y] == 0:
-                        buf[int((x + y * self.width) / 8)] &= ~(0x80 >> (x % 8))
-        elif(imwidth == self.height and imheight == self.width):
-        #    logger.debug("Horizontal")
-            for y in range(imheight):
-                for x in range(imwidth):
-                    newx = y
-                    newy = self.height - x - 1
-                    if pixels[x, y] == 0:
-                        buf[int((newx + newy*self.width) / 8)] &= ~(0x80 >> (y % 8))
-        return buf
-        
+        if imwidth != self.width or imheight != self.height:
+            raise ValueError('Image must be same dimensions as display \
+                ({0}x{1}).' .format(self.width, self.height))
+        return self._get_frame_buffer_for_size(image_monocolor, self.height, self.width)
+
     def _get_frame_buffer_for_size(self, image_monocolor, height, width):
         """ Get a frame buffer object from a PIL Image object assuming a specific size"""
         buf = [0x00] * (width * height // 8)
