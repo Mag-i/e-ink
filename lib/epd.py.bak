@@ -248,20 +248,24 @@ class EPD(object):
         for byte in lut_to_use.lut_bb:
             self.send_data(byte)
 
-    def getbuffer(self, image):
-        # logger.debug("bufsiz = ",int(self.width/8) * self.height)
-        buf = [0xFF] * (int(self.width/8) * self.height)
+    def _get_frame_buffer(self, image):
+        """ Get a full frame buffer from a PIL Image object """
         image_monocolor = image.convert('1')
         imwidth, imheight = image_monocolor.size
+        if imwidth != self.width or imheight != self.height:
+            raise ValueError('Image must be same dimensions as display \
+                ({0}x{1}).' .format(self.width, self.height))
+        return self._get_frame_buffer_for_size(image_monocolor, self.height, self.width)
+
+    def _get_frame_buffer_for_size(self, image_monocolor, height, width):
+        """ Get a frame buffer object from a PIL Image object assuming a specific size"""
+        buf = [0x00] * (width * height // 8)
         pixels = image_monocolor.load()
-        # logger.debug("imwidth = %d, imheight = %d",imwidth,imheight)
-        if(imwidth == self.width and imheight == self.height):
-            logger.debug("Vertical")
-            for y in range(imheight):
-                for x in range(imwidth):
-                    # Set the bits for the column of pixels at the current position.
-                    if pixels[x, y] == 0:
-                        buf[int((x + y * self.width) / 8)] &= ~(0x80 >> (x % 8))
+        for y in range(height):
+            for x in range(width):
+                # Set the bits for the column of pixels at the current position
+                if pixels[x, y] != 0:
+                    buf[(x + y * width) // 8] |= (0x80 >> (x % 8))
         elif(imwidth == self.height and imheight == self.width):
             logger.debug("Horizontal")
             for y in range(imheight):
